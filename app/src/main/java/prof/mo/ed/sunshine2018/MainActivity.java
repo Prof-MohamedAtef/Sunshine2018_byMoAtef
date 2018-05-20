@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_forecast);
+        setContentView(R.layout.activity_main);
 
         // COMPLETED (36) Delete the line where you get a reference to mWeatherTextView
 
