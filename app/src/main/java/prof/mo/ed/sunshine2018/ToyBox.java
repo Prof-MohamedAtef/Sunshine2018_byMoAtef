@@ -18,11 +18,13 @@ package prof.mo.ed.sunshine2018;
 public final class ToyBox {
 
     /**
-     * This method returns a list of popular toy names from the 20th and early 21st centuries.
+     * This method returns a list of 100 popular toy names from the 20th and early 21st centuries.
      * I don't know about you guys, but this definitely brings me back to my childhood...
      *
      * @return A list of popular toys
      */
+
+
     public static String[] getToyNames() {
         return new String[] {
                 "Red Toy Wagon",
