@@ -21,16 +21,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.Scanner;
 
 /**
  * These utilities will be used to communicate with the network.
  */
 public class NetworkUtils {
-//https://api.github.com/search/repositories?q=Text&sort=stars
+
     final static String GITHUB_BASE_URL =
             "https://api.github.com/search/repositories";
 
@@ -44,21 +42,20 @@ public class NetworkUtils {
     final static String sortBy = "stars";
 
     /**
-     * Builds the URL used to query Github.
+     * Builds the URL used to query GitHub.
      *
      * @param githubSearchQuery The keyword that will be queried for.
-     * @return The URL to use to query the weather server.
+     * @return The URL to use to query the GitHub.
      */
     public static URL buildUrl(String githubSearchQuery) {
-        // TODO (1) Fill in this method to build the proper Github query URL
-        Uri CompleteURI= Uri.parse(GITHUB_BASE_URL).buildUpon()
-                .appendQueryParameter(PARAM_QUERY,githubSearchQuery)
-                .appendQueryParameter(PARAM_SORT,sortBy)
+        Uri builtUri = Uri.parse(GITHUB_BASE_URL).buildUpon()
+                .appendQueryParameter(PARAM_QUERY, githubSearchQuery)
+                .appendQueryParameter(PARAM_SORT, sortBy)
                 .build();
-//        GITHUB_BASE_URL+"?"+PARAM_QUERY+"="+githubSearchQuery+"&"+PARAM_SORT+"="+sortBy;
-        URL url=null;
+
+        URL url = null;
         try {
-            url=new URL(CompleteURI.toString());
+            url = new URL(builtUri.toString());
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }

@@ -15,14 +15,13 @@
  */
 package prof.mo.ed.sunshine2018;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import java.net.URL;
 
@@ -42,20 +41,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mSearchBoxEditText = (EditText) findViewById(R.id.et_search_box);
+
         mUrlDisplayTextView = (TextView) findViewById(R.id.tv_url_display);
         mSearchResultsTextView = (TextView) findViewById(R.id.tv_github_search_results_json);
-
-
-
     }
 
-    // TODO (2) Create a method called makeGithubSearchQuery
-
-    // TODO (3) Within this method, build the URL with the text from the EditText and set the built URL to the TextView
-
-    public String makeGithubSearchQuery(String QueryFromEditText){
-        URL gitHubSearchUrl=NetworkUtils.buildUrl(QueryFromEditText);
-        return gitHubSearchUrl.toString();
+    /**
+     * This method retrieves the search text from the EditText, constructs
+     * the URL (using {@link NetworkUtils}) for the github repository you'd like to find, displays
+     * that URL in a TextView, and finally fires off an AsyncTask to perform the GET request using
+     * our (not yet created) {@link GithubQueryTask}
+     */
+    private void makeGithubSearchQuery() {
+        String githubQuery = mSearchBoxEditText.getText().toString();
+        URL githubSearchUrl = NetworkUtils.buildUrl(githubQuery);
+        mUrlDisplayTextView.setText(githubSearchUrl.toString());
+        // TODO (2) Call getResponseFromHttpUrl and display the results in mSearchResultsTextView
+        // TODO (3) Surround the call to getResponseFromHttpUrl with a try / catch block to catch an IOException
     }
 
     @Override
@@ -68,10 +70,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.action_search) {
-            // TODO (4) Remove the Toast message when the search menu item is clicked
-
-            // TODO (5) Call makeGithubSearchQuery when the search menu item is clicked
-            mSearchResultsTextView.setText(makeGithubSearchQuery(mSearchBoxEditText.getText().toString()));
+            makeGithubSearchQuery();
             return true;
         }
         return super.onOptionsItemSelected(item);
