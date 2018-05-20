@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     // COMPLETED (35) Add a private ForecastAdapter variable called mForecastAdapter
     private ForecastAdapter mForecastAdapter;
+    private GreenAdapter mAdapter;
+    private  static final int NUM_LIST_ITEMS=100;
 
     private TextView mErrorMessageDisplay;
 
@@ -84,11 +86,12 @@ public class MainActivity extends AppCompatActivity {
          * The ForecastAdapter is responsible for linking our weather data with the Views that
          * will end up displaying our weather data.
          */
-        mForecastAdapter = new ForecastAdapter();
+//        mForecastAdapter = new ForecastAdapter();
 
+        mAdapter=new GreenAdapter();
         // COMPLETED (44) Use mRecyclerView.setAdapter and pass in mForecastAdapter
         /* Setting the adapter attaches it to the RecyclerView in our layout. */
-        mRecyclerView.setAdapter(mForecastAdapter);
+        mRecyclerView.setAdapter(mAdapter);
 
         /*
          * The ProgressBar that will indicate to the user that we are loading data. It will be
@@ -185,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 showWeatherDataView();
                 // COMPLETED (45) Instead of iterating through every string, use mForecastAdapter.setWeatherData and pass in the weather data
                 mForecastAdapter.setWeatherData(weatherData);
+                mAdapter=new GreenAdapter(weatherData);
             } else {
                 showErrorMessage();
             }
@@ -207,7 +211,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.action_refresh) {
             // COMPLETED (46) Instead of setting the text to "", set the adapter to null before refreshing
-            mForecastAdapter.setWeatherData(null);
+//            mForecastAdapter.setWeatherData(null);
+            mAdapter=new GreenAdapter(0);
             loadWeatherData();
             return true;
         }

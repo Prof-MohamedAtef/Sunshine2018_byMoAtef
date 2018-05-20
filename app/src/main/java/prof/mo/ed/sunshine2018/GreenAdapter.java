@@ -16,10 +16,23 @@ public class GreenAdapter extends RecyclerView.Adapter<GreenAdapter.NumberViewHo
 
     private static final String TAG = GreenAdapter.class.getSimpleName();
     private int mNumberItems;
+    private String [] mWeatherData;
+    private String mOneWeatherData;
+
+
+
+    GreenAdapter(){
+
+    }
+
+    GreenAdapter(String []weatherData){
+        mWeatherData=weatherData;
+    }
 
     public GreenAdapter(int NumberOfItems){
         mNumberItems=NumberOfItems;
     }
+
     @NonNull
     @Override
     public NumberViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
@@ -34,7 +47,15 @@ public class GreenAdapter extends RecyclerView.Adapter<GreenAdapter.NumberViewHo
 
     @Override
     public void onBindViewHolder(@NonNull NumberViewHolder holder, int position) {
-        holder.bind(position);
+        if (mNumberItems!=0){
+            holder.bind(position);
+        }else if (!mWeatherData.equals("")){
+            for (String onewetherData : mWeatherData) {
+                mOneWeatherData = onewetherData;
+                holder.bind(mOneWeatherData);
+            }
+        }
+
     }
 
     @Override
@@ -52,6 +73,10 @@ public class GreenAdapter extends RecyclerView.Adapter<GreenAdapter.NumberViewHo
 
         void bind(int listIndex){
             listItemNumberView.setText(String.valueOf(listIndex));
+        }
+
+        void bind(String weatherStrings){
+            listItemNumberView.setText(String.valueOf(weatherStrings));
         }
     }
 }
