@@ -29,8 +29,9 @@ public class GreenAdapter extends RecyclerView.Adapter<GreenAdapter.NumberViewHo
         mWeatherData=weatherData;
     }
 
-    public GreenAdapter(int NumberOfItems){
+    public GreenAdapter(int NumberOfItems, ListItemClickListener listener){
         mNumberItems=NumberOfItems;
+        mOnClickListener=listener;
     }
 
     @NonNull
@@ -63,10 +64,11 @@ public class GreenAdapter extends RecyclerView.Adapter<GreenAdapter.NumberViewHo
         return mNumberItems;
     }
 
-    public class NumberViewHolder extends RecyclerView.ViewHolder{
+    public class NumberViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         public NumberViewHolder(View itemView) {
             super(itemView);
             listItemNumberView = (TextView) itemView.findViewById(R.id.tv_item_number);
+            itemView.setOnClickListener(this);
         }
 
         TextView listItemNumberView;
@@ -78,5 +80,17 @@ public class GreenAdapter extends RecyclerView.Adapter<GreenAdapter.NumberViewHo
         void bind(String weatherStrings){
             listItemNumberView.setText(String.valueOf(weatherStrings));
         }
+
+        @Override
+        public void onClick(View v) {
+            int clickedPosition= getAdapterPosition();
+            mOnClickListener.onListItemClick(clickedPosition);
+        }
+    }
+
+    private ListItemClickListener mOnClickListener = null;
+
+    public interface ListItemClickListener{
+        void onListItemClick(int clickedItemIndex);
     }
 }

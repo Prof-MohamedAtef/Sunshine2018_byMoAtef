@@ -26,13 +26,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import java.net.URL;
 
 import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.utilities.NetworkUtils;
 import prof.mo.ed.sunshine2018.utilities.OpenWeatherJsonUtils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GreenAdapter.ListItemClickListener {
 
     // COMPLETED (33) Delete mWeatherTextView
     // COMPLETED (34) Add a private RecyclerView variable called mRecyclerView
@@ -147,6 +149,11 @@ public class MainActivity extends AppCompatActivity {
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
+    @Override
+    public void onListItemClick(int clickedItemIndex) {
+        Toast.makeText(getApplicationContext(),"Item # "+clickedItemIndex+" is clicked",Toast.LENGTH_LONG).show();
+    }
+
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         @Override
@@ -195,6 +202,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private Toast mtoast;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
@@ -212,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_refresh) {
             // COMPLETED (46) Instead of setting the text to "", set the adapter to null before refreshing
 //            mForecastAdapter.setWeatherData(null);
-            mAdapter=new GreenAdapter(0);
+            mAdapter=new GreenAdapter(NUM_LIST_ITEMS,this);
             loadWeatherData();
             return true;
         }
