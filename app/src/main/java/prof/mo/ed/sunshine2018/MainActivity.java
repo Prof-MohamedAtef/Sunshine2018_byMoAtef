@@ -17,11 +17,13 @@ package prof.mo.ed.sunshine2018;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -37,6 +39,8 @@ import prof.mo.ed.sunshine2018.utilities.NetworkUtils;
 import prof.mo.ed.sunshine2018.utilities.OpenWeatherJsonUtils;
 
 public class MainActivity extends AppCompatActivity implements ForecastAdapter.ForecastAdapterOnClickHandler {
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     private RecyclerView mRecyclerView;
     private ForecastAdapter mForecastAdapter;
@@ -119,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.F
         Context context = this;
         Class destinationClass = DetailActivity.class;
         Intent intentToStartDetailActivity = new Intent(context, destinationClass);
-        // COMPLETED (1) Pass the weather to the DetailActivity
         intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
         startActivity(intentToStartDetailActivity);
     }
@@ -217,6 +220,8 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.F
             loadWeatherData();
             return true;
         }
+
+        // TODO (2) Launch the map when the map menu item is clicked
 
         return super.onOptionsItemSelected(item);
     }
