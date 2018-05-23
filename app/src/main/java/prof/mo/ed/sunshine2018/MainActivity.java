@@ -164,7 +164,9 @@ public class MainActivity extends AppCompatActivity implements
     public Loader<String> onCreateLoader(int id, final Bundle args) {
         return new AsyncTaskLoader<String>(this) {
 
-            // TODO (1) Create a String member variable called mGithubJson that will store the raw JSON
+            // COMPLETED (1) Create a String member variable called mGithubJson that will store the raw JSON
+            /* This String will contain the raw JSON from the results of our Github search */
+            String mGithubJson;
 
             @Override
             protected void onStartLoading() {
@@ -180,8 +182,16 @@ public class MainActivity extends AppCompatActivity implements
                  */
                 mLoadingIndicator.setVisibility(View.VISIBLE);
 
-                // TODO (2) If mGithubJson is not null, deliver that result. Otherwise, force a load
-                forceLoad();
+                // COMPLETED (2) If mGithubJson is not null, deliver that result. Otherwise, force a load
+                /*
+                 * If we already have cached results, just deliver them now. If we don't have any
+                 * cached results, force a load.
+                 */
+                if (mGithubJson != null) {
+                    deliverResult(mGithubJson);
+                } else {
+                    forceLoad();
+                }
             }
 
             @Override
@@ -206,20 +216,19 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
 
-            // TODO (3) Override deliverResult and store the data in mGithubJson
-            // TODO (4) Call super.deliverResult after storing the data
+            // COMPLETED (3) Override deliverResult and store the data in mGithubJson
+            // COMPLETED (4) Call super.deliverResult after storing the data
+            @Override
+            public void deliverResult(String githubJson) {
+                mGithubJson = githubJson;
+                super.deliverResult(githubJson);
+            }
         };
     }
 
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
-
-        /* When we finish loading, we want to hide the loading indicator from the user. */
         mLoadingIndicator.setVisibility(View.INVISIBLE);
-        /*
-         * If the results are null, we assume an error has occurred. There are much more robust
-         * methods for checking errors, but we wanted to keep this particular example simple.
-         */
         if (null == data) {
             showErrorMessage();
         } else {
@@ -230,10 +239,6 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onLoaderReset(Loader<String> loader) {
-        /*
-         * We aren't using this method in our example application, but we are required to Override
-         * it to implement the LoaderCallbacks<String> interface
-         */
     }
 
     @Override
@@ -255,7 +260,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-
         String queryUrl = mUrlDisplayTextView.getText().toString();
         outState.putString(SEARCH_QUERY_URL_EXTRA, queryUrl);
     }
