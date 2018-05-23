@@ -15,176 +15,209 @@
  */
 package prof.mo.ed.sunshine2018;
 
-import android.content.Intent;
-import android.net.Uri;
+import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.ShareCompat;
-import android.support.v4.app.ShareCompat.IntentBuilder;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+
+import java.net.URL;
+
+import prof.mo.ed.sunshine2018.data.SunshinePreferences;
+import prof.mo.ed.sunshine2018.utilities.NetworkUtils;
+import prof.mo.ed.sunshine2018.utilities.OpenWeatherJsonUtils;
+
+public class MainActivity extends AppCompatActivity implements ForecastAdapter.ForecastAdapterOnClickHandler {
+
+    private RecyclerView mRecyclerView;
+    private ForecastAdapter mForecastAdapter;
+
+    private TextView mErrorMessageDisplay;
+
+    private ProgressBar mLoadingIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_forecast);
+
+        /*
+         * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
+         * do things like set the adapter of the RecyclerView and toggle the visibility.
+         */
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_forecast);
+
+        /* This TextView is used to display errors and will be hidden if there are no errors */
+        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
+
+        /*
+         * LinearLayoutManager can support HORIZONTAL or VERTICAL orientations. The reverse layout
+         * parameter is useful mostly for HORIZONTAL layouts that should reverse for right to left
+         * languages.
+         */
+        LinearLayoutManager layoutManager
+                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        /*
+         * Use this setting to improve performance if you know that changes in content do not
+         * change the child layout size in the RecyclerView
+         */
+        mRecyclerView.setHasFixedSize(true);
+
+        /*
+         * The ForecastAdapter is responsible for linking our weather data with the Views that
+         * will end up displaying our weather data.
+         */
+        mForecastAdapter = new ForecastAdapter(this);
+
+        /* Setting the adapter attaches it to the RecyclerView in our layout. */
+        mRecyclerView.setAdapter(mForecastAdapter);
+
+        /*
+         * The ProgressBar that will indicate to the user that we are loading data. It will be
+         * hidden when no data is loading.
+         *
+         * Please note: This so called "ProgressBar" isn't a bar by default. It is more of a
+         * circle. We didn't make the rules (or the names of Views), we just follow them.
+         */
+        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+
+        /* Once all of our views are setup, we can load the weather data. */
+        loadWeatherData();
     }
 
     /**
-     * This method is called when the Open Website button is clicked. It will open the website
-     * specified by the URL represented by the variable urlAsString using implicit Intents.
-     *
-     * @param v Button that was clicked.
+     * This method will get the user's preferred location for weather, and then tell some
+     * background method to get the weather data in the background.
      */
-    public void onClickOpenWebpageButton(View v) {
-        String urlAsString = "http://www.udacity.com";
-        openWebPage(urlAsString);
+    private void loadWeatherData() {
+        showWeatherDataView();
+
+        String location = SunshinePreferences.getPreferredWeatherLocation(this);
+        new FetchWeatherTask().execute(location);
     }
 
     /**
-     * This method is called when the Open Location in Map button is clicked. It will open the
-     * a map to the location represented by the variable addressString using implicit Intents.
+     * This method is overridden by our MainActivity class in order to handle RecyclerView item
+     * clicks.
      *
-     * @param v Button that was clicked.
+     * @param weatherForDay The weather for the day that was clicked
      */
-    public void onClickOpenAddressButton(View v) {
-        String addressString = "1600 Amphitheatre Parkway, CA";
-
-        Uri.Builder builder = new Uri.Builder();
-        builder.scheme("geo")
-                .path("0,0")
-                .query(addressString);
-        Uri addressUri = builder.build();
-
-        showMap(addressUri);
-    }
-
-    /**
-     * This method is called when the Share Text Content button is clicked. It will simply share
-     * the text contained within the String textThatYouWantToShare.
-     *
-     * @param v Button that was clicked.
-     */
-    public void onClickShareTextButton(View v) {
-        // COMPLETED (5) Specify a String you'd like to share
-        /* Create the String that you want to share */
-        String textThatYouWantToShare =
-                "Sharing the coolest thing I've learned so far. You should " +
-                        "check out Udacity and Google's Android Nanodegree!";
-
-        // COMPLETED (6) Replace the Toast with shareText, passing in the String from step 5
-        /* Send that text to our method that will share it. */
-        shareText(textThatYouWantToShare);
-    }
-
-    /**
-     * This is where you will create and fire off your own implicit Intent. Yours will be very
-     * similar to what I've done above. You can view a list of implicit Intents on the Common
-     * Intents page from the developer documentation.
-     *
-     * @see <http://developer.android.com/guide/components/intents-common.html/>
-     *
-     * @param v Button that was clicked.
-     */
-    public void createYourOwn(View v) {
-        Toast.makeText(this,
-                "TODO: Create Your Own Implicit Intent",
-                Toast.LENGTH_SHORT)
+    @Override
+    public void onClick(String weatherForDay) {
+        Context context = this;
+        // TODO (1) Create a new Activity called DetailActivity using Android Studio's wizard
+        // TODO (2) Change the root layout of activity_detail.xml to a FrameLayout and remove unnecessary xml attributes
+        // TODO (3) Remove the Toast and launch the DetailActivity using an explicit Intent
+        Toast.makeText(context, weatherForDay, Toast.LENGTH_SHORT)
                 .show();
     }
 
     /**
-     * This method fires off an implicit Intent to open a webpage.
-     *
-     * @param url Url of webpage to open. Should start with http:// or https:// as that is the
-     *            scheme of the URI expected with this Intent according to the Common Intents page
+     * This method will make the View for the weather data visible and
+     * hide the error message.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't
+     * need to check whether each view is currently visible or invisible.
      */
-    private void openWebPage(String url) {
-        /*
-         * We wanted to demonstrate the Uri.parse method because its usage occurs frequently. You
-         * could have just as easily passed in a Uri as the parameter of this method.
-         */
-        Uri webpage = Uri.parse(url);
-
-        /*
-         * Here, we create the Intent with the action of ACTION_VIEW. This action allows the user
-         * to view particular content. In this case, our webpage URL.
-         */
-        Intent intent = new Intent(Intent.ACTION_VIEW, webpage);
-
-        /*
-         * This is a check we perform with every implicit Intent that we launch. In some cases,
-         * the device where this code is running might not have an Activity to perform the action
-         * with the data we've specified. Without this check, in those cases your app would crash.
-         */
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
-        }
+    private void showWeatherDataView() {
+        /* First, make sure the error is invisible */
+        mErrorMessageDisplay.setVisibility(View.INVISIBLE);
+        /* Then, make sure the weather data is visible */
+        mRecyclerView.setVisibility(View.VISIBLE);
     }
 
     /**
-     * This method will fire off an implicit Intent to view a location on a map.
-     *
-     * When constructing implicit Intents, you can use either the setData method or specify the
-     * URI as the second parameter of the Intent's constructor,
-     * as I do in {@link #openWebPage(String)}
-     *
-     * @param geoLocation The Uri representing the location that will be opened in the map
+     * This method will make the error message visible and hide the weather
+     * View.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't
+     * need to check whether each view is currently visible or invisible.
      */
-    private void showMap(Uri geoLocation) {
-        /*
-         * Again, we create an Intent with the action, ACTION_VIEW because we want to VIEW the
-         * contents of this Uri.
-         */
-        Intent intent = new Intent(Intent.ACTION_VIEW);
+    private void showErrorMessage() {
+        /* First, hide the currently visible data */
+        mRecyclerView.setVisibility(View.INVISIBLE);
+        /* Then, show the error */
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
+    }
 
-        /*
-         * Using setData to set the Uri of this Intent has the exact same affect as passing it in
-         * the Intent's constructor. This is simply an alternate way of doing this.
-         */
-        intent.setData(geoLocation);
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected String[] doInBackground(String... params) {
+
+            /* If there's no zip code, there's nothing to look up. */
+            if (params.length == 0) {
+                return null;
+            }
+
+            String location = params[0];
+            URL weatherRequestUrl = NetworkUtils.buildUrl(location);
+
+            try {
+                String jsonWeatherResponse = NetworkUtils
+                        .getResponseFromHttpUrl(weatherRequestUrl);
+
+                String[] simpleJsonWeatherData = OpenWeatherJsonUtils
+                        .getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
+
+                return simpleJsonWeatherData;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String[] weatherData) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            if (weatherData != null) {
+                showWeatherDataView();
+                mForecastAdapter.setWeatherData(weatherData);
+            } else {
+                showErrorMessage();
+            }
         }
     }
 
-    // COMPLETED (1) Create a void method called shareText that accepts a String as a parameter
-    /**
-     * This method shares text and allows the user to select which app they would like to use to
-     * share the text. Using ShareCompat's IntentBuilder, we get some really cool functionality for
-     * free. The chooser that is started using the {@link IntentBuilder#startChooser()} method will
-     * create a chooser when more than one app on the device can handle the Intent. This happens
-     * when the user has, for example, both a texting app and an email app. If only one Activity
-     * on the phone can handle the Intent, it will automatically be launched.
-     *
-     * @param textToShare Text that will be shared
-     */
-    private void shareText(String textToShare) {
-        // COMPLETED (2) Create a String variable called mimeType and set it to "text/plain"
-        /*
-         * You can think of MIME types similarly to file extensions. They aren't the exact same,
-         * but MIME types help a computer determine which applications can open which content. For
-         * example, if you double click on a .pdf file, you will be presented with a list of
-         * programs that can open PDFs. Specifying the MIME type as text/plain has a similar affect
-         * on our implicit Intent. With text/plain specified, all apps that can handle text content
-         * in some way will be offered when we call startActivity on this particular Intent.
-         */
-        String mimeType = "text/plain";
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
+        MenuInflater inflater = getMenuInflater();
+        /* Use the inflater's inflate method to inflate our menu layout to this menu */
+        inflater.inflate(R.menu.forecast, menu);
+        /* Return true so that the menu is displayed in the Toolbar */
+        return true;
+    }
 
-        // COMPLETED (3) Create a title for the chooser window that will pop up
-        /* This is just the title of the window that will pop up when we call startActivity */
-        String title = "Learning How to Share";
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
 
-        // COMPLETED (4) Use ShareCompat.IntentBuilder to build the Intent and start the chooser
-        /* ShareCompat.IntentBuilder provides a fluent API for creating Intents */
-        ShareCompat.IntentBuilder
-                /* The from method specifies the Context from which this share is coming from */
-                .from(this)
-                .setType(mimeType)
-                .setChooserTitle(title)
-                .setText(textToShare)
-                .startChooser();
+        if (id == R.id.action_refresh) {
+            mForecastAdapter.setWeatherData(null);
+            loadWeatherData();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
