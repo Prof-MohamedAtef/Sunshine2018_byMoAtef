@@ -21,6 +21,12 @@ import android.util.Log;
 import prof.mo.ed.sunshine2018.R;
 import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 
+
+/**
+ * Contains useful utilities for a weather app, such as conversion between Celsius and Fahrenheit,
+ * from kph to mph, and from degrees to NSEW.  It also contains the mapping of weather condition
+ * codes in OpenWeatherMap to strings.  These strings are contained
+ */
 public final class SunshineWeatherUtils {
 
     private static final String LOG_TAG = SunshineWeatherUtils.class.getSimpleName();
