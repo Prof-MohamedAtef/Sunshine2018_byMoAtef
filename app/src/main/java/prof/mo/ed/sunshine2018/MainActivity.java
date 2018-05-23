@@ -1,172 +1,167 @@
-/*
- * Copyright (C) 2016 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package prof.mo.ed.sunshine2018;
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import java.net.URL;
 
-import prof.mo.ed.sunshine2018.data.SunshinePreferences;
-import prof.mo.ed.sunshine2018.utilities.NetworkUtils;
-import prof.mo.ed.sunshine2018.utilities.OpenWeatherJsonUtils;
+public class MainActivity extends AppCompatActivity {
 
-public class MainActivity extends AppCompatActivity implements ForecastAdapter.ForecastAdapterOnClickHandler {
-
+    /*
+     * This tag will be used for logging. It is best practice to use the class's name using
+     * getSimpleName as that will greatly help to identify the location from which your logs are
+     * being posted.
+     */
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private RecyclerView mRecyclerView;
-    private ForecastAdapter mForecastAdapter;
+    // TODO (1) Create a key String called LIFECYCLE_CALLBACKS_TEXT_KEY
 
-    private TextView mErrorMessageDisplay;
+    /* Constant values for the names of each respective lifecycle callback */
+    private static final String ON_CREATE = "onCreate";
+    private static final String ON_START = "onStart";
+    private static final String ON_RESUME = "onResume";
+    private static final String ON_PAUSE = "onPause";
+    private static final String ON_STOP = "onStop";
+    private static final String ON_RESTART = "onRestart";
+    private static final String ON_DESTROY = "onDestroy";
+    private static final String ON_SAVE_INSTANCE_STATE = "onSaveInstanceState";
 
-    private ProgressBar mLoadingIndicator;
+    /*
+     * This TextView will contain a running log of every lifecycle callback method called from this
+     * Activity. This TextView can be reset to its default state by clicking the Button labeled
+     * "Reset Log"
+     */
+    private TextView mLifecycleDisplay;
 
+    /**
+     * Called when the activity is first created. This is where you should do all of your normal
+     * static set up: create views, bind data to lists, etc.
+     *
+     * Always followed by onStart().
+     *
+     * @param savedInstanceState The Activity's previously frozen state, if there was one.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_forecast);
+        setContentView(R.layout.activity_main);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_forecast);
-        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
-        LinearLayoutManager layoutManager
-                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.setHasFixedSize(true);
-        mForecastAdapter = new ForecastAdapter(this);
-        mRecyclerView.setAdapter(mForecastAdapter);
-        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
-        loadWeatherData();
-    }
-    private void loadWeatherData() {
-        showWeatherDataView();
-        String location = SunshinePreferences.getPreferredWeatherLocation(this);
-        new FetchWeatherTask().execute(location);
+        mLifecycleDisplay = (TextView) findViewById(R.id.tv_lifecycle_events_display);
+
+        // TODO (6) If savedInstanceState is not null and contains LIFECYCLE_CALLBACKS_TEXT_KEY, set that text on our TextView
+
+        logAndAppend(ON_CREATE);
     }
 
+    /**
+     * Called when the activity is becoming visible to the user.
+     *
+     * Followed by onResume() if the activity comes to the foreground, or onStop() if it becomes
+     * hidden.
+     */
     @Override
-    public void onClick(String weatherForDay) {
-        Context context = this;
-        Class destinationClass = DetailActivity.class;
-        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
-        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
-        startActivity(intentToStartDetailActivity);
+    protected void onStart() {
+        super.onStart();
+
+        logAndAppend(ON_START);
     }
 
-    private void showWeatherDataView() {
-        mErrorMessageDisplay.setVisibility(View.INVISIBLE);
-        mRecyclerView.setVisibility(View.VISIBLE);
-    }
-
-    private void showErrorMessage() {
-        mRecyclerView.setVisibility(View.INVISIBLE);
-        mErrorMessageDisplay.setVisibility(View.VISIBLE);
-    }
-
-    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mLoadingIndicator.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected String[] doInBackground(String... params) {
-            if (params.length == 0) {
-                return null;
-            }
-
-            String location = params[0];
-            URL weatherRequestUrl = NetworkUtils.buildUrl(location);
-
-            try {
-                String jsonWeatherResponse = NetworkUtils
-                        .getResponseFromHttpUrl(weatherRequestUrl);
-
-                String[] simpleJsonWeatherData = OpenWeatherJsonUtils
-                        .getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
-
-                return simpleJsonWeatherData;
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String[] weatherData) {
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
-            if (weatherData != null) {
-                showWeatherDataView();
-                mForecastAdapter.setWeatherData(weatherData);
-            } else {
-                showErrorMessage();
-            }
-        }
-    }
-
-    private void openLocationInMap() {
-        String addressString = "1600 Ampitheatre Parkway, CA";
-        Uri geoLocation = Uri.parse("geo:0,0?q=" + addressString);
-
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(geoLocation);
-
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
-        } else {
-            Log.d(TAG, "Couldn't call " + geoLocation.toString()
-                    + ", no receiving apps installed!");
-        }
-    }
-
+    /**
+     * Called when the activity will start interacting with the user. At this point your activity
+     * is at the top of the activity stack, with user input going to it.
+     *
+     * Always followed by onPause().
+     */
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.forecast, menu);
-        return true;
+    protected void onResume() {
+        super.onResume();
+
+        logAndAppend(ON_RESUME);
     }
 
+    /**
+     * Called when the system is about to start resuming a previous activity. This is typically
+     * used to commit unsaved changes to persistent data, stop animations and other things that may
+     * be consuming CPU, etc. Implementations of this method must be very quick because the next
+     * activity will not be resumed until this method returns.
+     *
+     * Followed by either onResume() if the activity returns back to the front, or onStop() if it
+     * becomes invisible to the user.
+     */
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_refresh) {
-            mForecastAdapter.setWeatherData(null);
-            loadWeatherData();
-            return true;
-        }
-        if (id == R.id.action_map) {
-            openLocationInMap();
-            return true;
-        }
+    protected void onPause() {
+        super.onPause();
 
-        return super.onOptionsItemSelected(item);
+        logAndAppend(ON_PAUSE);
+    }
+
+    /**
+     * Called when the activity is no longer visible to the user, because another activity has been
+     * resumed and is covering this one. This may happen either because a new activity is being
+     * started, an existing one is being brought in front of this one, or this one is being
+     * destroyed.
+     *
+     * Followed by either onRestart() if this activity is coming back to interact with the user, or
+     * onDestroy() if this activity is going away.
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        logAndAppend(ON_STOP);
+    }
+
+    /**
+     * Called after your activity has been stopped, prior to it being started again.
+     *
+     * Always followed by onStart()
+     */
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        logAndAppend(ON_RESTART);
+    }
+    
+    /**
+     * The final call you receive before your activity is destroyed. This can happen either because
+     * the activity is finishing (someone called finish() on it, or because the system is
+     * temporarily destroying this instance of the activity to save space. You can distinguish
+     * between these two scenarios with the isFinishing() method.
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        logAndAppend(ON_DESTROY);
+    }
+
+    // TODO (2) Override onSaveInstanceState
+    // Do steps 3 - 5 within onSaveInstanceState
+    // TODO (3) Call super.onSaveInstanceState
+    // TODO (4) Call logAndAppend with the ON_SAVE_INSTANCE_STATE String
+    // TODO (5) Put the text from the TextView in the outState bundle
+
+    /**
+     * Logs to the console and appends the lifecycle method name to the TextView so that you can
+     * view the series of method callbacks that are called both from the app and from within
+     * Android Studio's Logcat.
+     *
+     * @param lifecycleEvent The name of the event to be logged.
+     */
+    private void logAndAppend(String lifecycleEvent) {
+        Log.d(TAG, "Lifecycle Event: " + lifecycleEvent);
+
+        mLifecycleDisplay.append(lifecycleEvent + "\n");
+    }
+
+    /**
+     * This method resets the contents of the TextView to its default text of "Lifecycle callbacks"
+     *
+     * @param view The View that was clicked. In this case, it is the Button from our layout.
+     */
+    public void resetLifecycleDisplay(View view) {
+        mLifecycleDisplay.setText("Lifecycle callbacks:\n");
     }
 }
