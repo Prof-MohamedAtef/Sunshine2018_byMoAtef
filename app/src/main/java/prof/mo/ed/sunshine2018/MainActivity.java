@@ -25,29 +25,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView mLifecycleDisplay;
 
     // TODO (1) Declare and instantiate a static ArrayList of Strings called mLifecycleCallbacks
-
-    /**
-     * Called when the activity is first created. This is where you should do all of your normal
-     * static set up: create views, bind data to lists, etc.
-     *
-     * Always followed by onStart().
-     *
-     * @param savedInstanceState The Activity's previously frozen state, if there was one.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mLifecycleDisplay = (TextView) findViewById(R.id.tv_lifecycle_events_display);
-
-        /*
-         * If savedInstanceState is not null, that means our Activity is not being started for the
-         * first time. Even if the savedInstanceState is not null, it is smart to check if the
-         * bundle contains the key we are looking for. In our case, the key we are looking for maps
-         * to the contents of the TextView that displays our list of callbacks. If the bundle
-         * contains that key, we set the contents of the TextView accordingly.
-         */
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(LIFECYCLE_CALLBACKS_TEXT_KEY)) {
                 String allPreviousLifecycleCallbacks = savedInstanceState
@@ -63,12 +46,6 @@ public class MainActivity extends AppCompatActivity {
         logAndAppend(ON_CREATE);
     }
 
-    /**
-     * Called when the activity is becoming visible to the user.
-     *
-     * Followed by onResume() if the activity comes to the foreground, or onStop() if it becomes
-     * hidden.
-     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -76,12 +53,6 @@ public class MainActivity extends AppCompatActivity {
         logAndAppend(ON_START);
     }
 
-    /**
-     * Called when the activity will start interacting with the user. At this point your activity
-     * is at the top of the activity stack, with user input going to it.
-     *
-     * Always followed by onPause().
-     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -89,15 +60,6 @@ public class MainActivity extends AppCompatActivity {
         logAndAppend(ON_RESUME);
     }
 
-    /**
-     * Called when the system is about to start resuming a previous activity. This is typically
-     * used to commit unsaved changes to persistent data, stop animations and other things that may
-     * be consuming CPU, etc. Implementations of this method must be very quick because the next
-     * activity will not be resumed until this method returns.
-     *
-     * Followed by either onResume() if the activity returns back to the front, or onStop() if it
-     * becomes invisible to the user.
-     */
     @Override
     protected void onPause() {
         super.onPause();
