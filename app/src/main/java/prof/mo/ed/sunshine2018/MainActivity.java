@@ -15,39 +15,34 @@
  */
 package prof.mo.ed.sunshine2018;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import java.io.IOException;
 import java.net.URL;
 
+import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.utilities.NetworkUtils;
+import prof.mo.ed.sunshine2018.utilities.OpenWeatherJsonUtils;
 
-public class MainActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<String> {
+// TODO (1) Implement the proper LoaderCallbacks interface and the methods of that interface
+public class MainActivity extends AppCompatActivity implements ForecastAdapter.ForecastAdapterOnClickHandler {
 
-    /* A constant to save and restore the URL that is being displayed */
-    private static final String SEARCH_QUERY_URL_EXTRA = "query";
+    private static final String TAG = MainActivity.class.getSimpleName();
 
-    /*
-     * This number will uniquely identify our Loader and is chosen arbitrarily. You can change this
-     * to any number you like, as long as you use the same variable name.
-     */
-    private static final int GITHUB_SEARCH_LOADER = 22;
-
-    private EditText mSearchBoxEditText;
-
-    private TextView mUrlDisplayTextView;
-    private TextView mSearchResultsTextView;
+    private RecyclerView mRecyclerView;
+    private ForecastAdapter mForecastAdapter;
 
     private TextView mErrorMessageDisplay;
 
@@ -56,98 +51,103 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_forecast);
 
-        mSearchBoxEditText = (EditText) findViewById(R.id.et_search_box);
+        /*
+         * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
+         * do things like set the adapter of the RecyclerView and toggle the visibility.
+         */
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_forecast);
 
-        mUrlDisplayTextView = (TextView) findViewById(R.id.tv_url_display);
-        mSearchResultsTextView = (TextView) findViewById(R.id.tv_github_search_results_json);
-
+        /* This TextView is used to display errors and will be hidden if there are no errors */
         mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
 
+        /*
+         * LinearLayoutManager can support HORIZONTAL or VERTICAL orientations. The reverse layout
+         * parameter is useful mostly for HORIZONTAL layouts that should reverse for right to left
+         * languages.
+         */
+        LinearLayoutManager layoutManager
+                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        /*
+         * Use this setting to improve performance if you know that changes in content do not
+         * change the child layout size in the RecyclerView
+         */
+        mRecyclerView.setHasFixedSize(true);
+
+        /*
+         * The ForecastAdapter is responsible for linking our weather data with the Views that
+         * will end up displaying our weather data.
+         */
+        mForecastAdapter = new ForecastAdapter(this);
+
+        /* Setting the adapter attaches it to the RecyclerView in our layout. */
+        mRecyclerView.setAdapter(mForecastAdapter);
+
+        /*
+         * The ProgressBar that will indicate to the user that we are loading data. It will be
+         * hidden when no data is loading.
+         *
+         * Please note: This so called "ProgressBar" isn't a bar by default. It is more of a
+         * circle. We didn't make the rules (or the names of Views), we just follow them.
+         */
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
-        if (savedInstanceState != null) {
-            String queryUrl = savedInstanceState.getString(SEARCH_QUERY_URL_EXTRA);
-
-            mUrlDisplayTextView.setText(queryUrl);
-        }
-
-        /*
-         * Initialize the loader
-         */
-        getSupportLoaderManager().initLoader(GITHUB_SEARCH_LOADER, null, this);
+        // TODO (7) Remove the code for the AsyncTask and initialize the AsyncTaskLoader
+        /* Once all of our views are setup, we can load the weather data. */
+        loadWeatherData();
     }
 
     /**
-     * This method retrieves the search text from the EditText, constructs the
-     * URL (using {@link NetworkUtils}) for the github repository you'd like to find, displays
-     * that URL in a TextView, and finally request that an AsyncTaskLoader performs the GET request.
+     * This method will get the user's preferred location for weather, and then tell some
+     * background method to get the weather data in the background.
      */
-    private void makeGithubSearchQuery() {
-        String githubQuery = mSearchBoxEditText.getText().toString();
+    private void loadWeatherData() {
+        showWeatherDataView();
 
-        /*
-         * If the user didn't enter anything, there's nothing to search for. In the case where no
-         * search text was entered but the search button was clicked, we will display a message
-         * stating that there is nothing to search for and we will not attempt to load anything.
-         *
-         * If there is text entered in the search box when the search button was clicked, we will
-         * create the URL that will return our Github search results, display that URL, and then
-         * pass that URL to the Loader. The reason we pass the URL as a String is simply a matter
-         * of convenience. There are other ways of achieving this same result, but we felt this
-         * was the simplest.
-         */
-        if (TextUtils.isEmpty(githubQuery)) {
-            mUrlDisplayTextView.setText("No query entered, nothing to search for.");
-            return;
-        }
+        String location = SunshinePreferences.getPreferredWeatherLocation(this);
+        new FetchWeatherTask().execute(location);
+    }
 
-        URL githubSearchUrl = NetworkUtils.buildUrl(githubQuery);
-        mUrlDisplayTextView.setText(githubSearchUrl.toString());
+    // TODO (2) Within onCreateLoader, return a new AsyncTaskLoader that looks a lot like the existing FetchWeatherTask.
+    // TODO (3) Cache the weather data in a member variable and deliver it in onStartLoading.
 
-        Bundle queryBundle = new Bundle();
-        queryBundle.putString(SEARCH_QUERY_URL_EXTRA, githubSearchUrl.toString());
+    // TODO (4) When the load is finished, show either the data or an error message if there is no data
 
-        /*
-         * Now that we've created our bundle that we will pass to our Loader, we need to decide
-         * if we should restart the loader (if the loader already existed) or if we need to
-         * initialize the loader (if the loader did NOT already exist).
-         *
-         * We do this by first store the support loader manager in the variable loaderManager.
-         * All things related to the Loader go through through the LoaderManager. Once we have a
-         * hold on the support loader manager, (loaderManager) we can attempt to access our
-         * githubSearchLoader. To do this, we use LoaderManager's method, "getLoader", and pass in
-         * the ID we assigned in its creation. You can think of this process similar to finding a
-         * View by ID. We give the LoaderManager an ID and it returns a loader (if one exists). If
-         * one doesn't exist, we tell the LoaderManager to create one. If one does exist, we tell
-         * the LoaderManager to restart it.
-         */
-        LoaderManager loaderManager = getSupportLoaderManager();
-        Loader<String> githubSearchLoader = loaderManager.getLoader(GITHUB_SEARCH_LOADER);
-        if (githubSearchLoader == null) {
-            loaderManager.initLoader(GITHUB_SEARCH_LOADER, queryBundle, this);
-        } else {
-            loaderManager.restartLoader(GITHUB_SEARCH_LOADER, queryBundle, this);
-        }
+    /**
+     * This method is overridden by our MainActivity class in order to handle RecyclerView item
+     * clicks.
+     *
+     * @param weatherForDay The weather for the day that was clicked
+     */
+    @Override
+    public void onClick(String weatherForDay) {
+        Context context = this;
+        Class destinationClass = DetailActivity.class;
+        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
+        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
+        startActivity(intentToStartDetailActivity);
     }
 
     /**
-     * This method will make the View for the JSON data visible and
+     * This method will make the View for the weather data visible and
      * hide the error message.
      * <p>
      * Since it is okay to redundantly set the visibility of a View, we don't
      * need to check whether each view is currently visible or invisible.
      */
-    private void showJsonDataView() {
+    private void showWeatherDataView() {
         /* First, make sure the error is invisible */
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);
-        /* Then, make sure the JSON data is visible */
-        mSearchResultsTextView.setVisibility(View.VISIBLE);
+        /* Then, make sure the weather data is visible */
+        mRecyclerView.setVisibility(View.VISIBLE);
     }
 
     /**
-     * This method will make the error message visible and hide the JSON
+     * This method will make the error message visible and hide the weather
      * View.
      * <p>
      * Since it is okay to redundantly set the visibility of a View, we don't
@@ -155,112 +155,109 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void showErrorMessage() {
         /* First, hide the currently visible data */
-        mSearchResultsTextView.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.INVISIBLE);
         /* Then, show the error */
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    @Override
-    public Loader<String> onCreateLoader(int id, final Bundle args) {
-        return new AsyncTaskLoader<String>(this) {
+    // TODO (6) Remove any and all code from MainActivity that references FetchWeatherTask
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
-            // COMPLETED (1) Create a String member variable called mGithubJson that will store the raw JSON
-            /* This String will contain the raw JSON from the results of our Github search */
-            String mGithubJson;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
 
-            @Override
-            protected void onStartLoading() {
+        @Override
+        protected String[] doInBackground(String... params) {
 
-                /* If no arguments were passed, we don't have a query to perform. Simply return. */
-                if (args == null) {
-                    return;
-                }
-
-                /*
-                 * When we initially begin loading in the background, we want to display the
-                 * loading indicator to the user
-                 */
-                mLoadingIndicator.setVisibility(View.VISIBLE);
-
-                // COMPLETED (2) If mGithubJson is not null, deliver that result. Otherwise, force a load
-                /*
-                 * If we already have cached results, just deliver them now. If we don't have any
-                 * cached results, force a load.
-                 */
-                if (mGithubJson != null) {
-                    deliverResult(mGithubJson);
-                } else {
-                    forceLoad();
-                }
+            /* If there's no zip code, there's nothing to look up. */
+            if (params.length == 0) {
+                return null;
             }
 
-            @Override
-            public String loadInBackground() {
+            String location = params[0];
+            URL weatherRequestUrl = NetworkUtils.buildUrl(location);
 
-                /* Extract the search query from the args using our constant */
-                String searchQueryUrlString = args.getString(SEARCH_QUERY_URL_EXTRA);
+            try {
+                String jsonWeatherResponse = NetworkUtils
+                        .getResponseFromHttpUrl(weatherRequestUrl);
 
-                /* If the user didn't enter anything, there's nothing to search for */
-                if (searchQueryUrlString == null || TextUtils.isEmpty(searchQueryUrlString)) {
-                    return null;
-                }
+                String[] simpleJsonWeatherData = OpenWeatherJsonUtils
+                        .getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
 
-                /* Parse the URL from the passed in String and perform the search */
-                try {
-                    URL githubUrl = new URL(searchQueryUrlString);
-                    String githubSearchResults = NetworkUtils.getResponseFromHttpUrl(githubUrl);
-                    return githubSearchResults;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
+                return simpleJsonWeatherData;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
             }
+        }
 
-            // COMPLETED (3) Override deliverResult and store the data in mGithubJson
-            // COMPLETED (4) Call super.deliverResult after storing the data
-            @Override
-            public void deliverResult(String githubJson) {
-                mGithubJson = githubJson;
-                super.deliverResult(githubJson);
+        @Override
+        protected void onPostExecute(String[] weatherData) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            if (weatherData != null) {
+                showWeatherDataView();
+                mForecastAdapter.setWeatherData(weatherData);
+            } else {
+                showErrorMessage();
             }
-        };
+        }
     }
 
-    @Override
-    public void onLoadFinished(Loader<String> loader, String data) {
-        mLoadingIndicator.setVisibility(View.INVISIBLE);
-        if (null == data) {
-            showErrorMessage();
+    /**
+     * This method uses the URI scheme for showing a location found on a
+     * map. This super-handy intent is detailed in the "Common Intents"
+     * page of Android's developer site:
+     *
+     * @see <a"http://developer.android.com/guide/components/intents-common.html#Maps">
+     *
+     * Hint: Hold Command on Mac or Control on Windows and click that link
+     * to automagically open the Common Intents page
+     */
+    private void openLocationInMap() {
+        String addressString = "1600 Ampitheatre Parkway, CA";
+        Uri geoLocation = Uri.parse("geo:0,0?q=" + addressString);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
         } else {
-            mSearchResultsTextView.setText(data);
-            showJsonDataView();
+            Log.d(TAG, "Couldn't call " + geoLocation.toString()
+                    + ", no receiving apps installed!");
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<String> loader) {
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
+        /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
+        MenuInflater inflater = getMenuInflater();
+        /* Use the inflater's inflate method to inflate our menu layout to this menu */
+        inflater.inflate(R.menu.forecast, menu);
+        /* Return true so that the menu is displayed in the Toolbar */
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int itemThatWasClickedId = item.getItemId();
-        if (itemThatWasClickedId == R.id.action_search) {
-            makeGithubSearchQuery();
+        int id = item.getItemId();
+
+        // TODO (5) Refactor the refresh functionality to work with our AsyncTaskLoader
+        if (id == R.id.action_refresh) {
+            mForecastAdapter.setWeatherData(null);
+            loadWeatherData();
             return true;
         }
-        return super.onOptionsItemSelected(item);
-    }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        String queryUrl = mUrlDisplayTextView.getText().toString();
-        outState.putString(SEARCH_QUERY_URL_EXTRA, queryUrl);
+        if (id == R.id.action_map) {
+            openLocationInMap();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
