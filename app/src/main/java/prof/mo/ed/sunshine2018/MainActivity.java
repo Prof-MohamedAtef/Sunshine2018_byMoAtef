@@ -1,237 +1,163 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package prof.mo.ed.sunshine2018;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.URL;
+
+import prof.mo.ed.sunshine2018.utilities.NetworkUtils;
 
 public class MainActivity extends AppCompatActivity {
 
-    /*
-     * This tag will be used for logging. It is best practice to use the class's name using
-     * getSimpleName as that will greatly help to identify the location from which your logs are
-     * being posted.
-     */
-    private static final String TAG = MainActivity.class.getSimpleName();
+    // TODO (1) Create a static final key to store the query's URL
 
-    /*
-     * This constant String will be used to store the content of the TextView used to display the
-     * list of callbacks. The reason we are storing the contents of the TextView is so that you can
-     * see the entire set of callbacks as they are called.
-     */
-    private static final String LIFECYCLE_CALLBACKS_TEXT_KEY = "callbacks";
+    // TODO (2) Create a static final key to store the search's raw JSON
 
-    /* Constant values for the names of each respective lifecycle callback */
-    private static final String ON_CREATE = "onCreate";
-    private static final String ON_START = "onStart";
-    private static final String ON_RESUME = "onResume";
-    private static final String ON_PAUSE = "onPause";
-    private static final String ON_STOP = "onStop";
-    private static final String ON_RESTART = "onRestart";
-    private static final String ON_DESTROY = "onDestroy";
-    private static final String ON_SAVE_INSTANCE_STATE = "onSaveInstanceState";
+    private EditText mSearchBoxEditText;
 
-    /*
-     * This TextView will contain a running log of every lifecycle callback method called from this
-     * Activity. This TextView can be reset to its default state by clicking the Button labeled
-     * "Reset Log"
-     */
-    private TextView mLifecycleDisplay;
+    private TextView mUrlDisplayTextView;
+    private TextView mSearchResultsTextView;
 
-    // COMPLETED (1) Declare and instantiate a static ArrayList of Strings called mLifecycleCallbacks
-    /*
-     * This ArrayList will keep track of lifecycle callbacks that occur after we are able to save
-     * them. Since, as we've observed, the contents of the TextView are saved in onSaveInstanceState
-     * BEFORE onStop and onDestroy are called, we must track when onStop and onDestroy are called,
-     * and then update the UI in onStart when the Activity is back on the screen.
-     */
+    private TextView mErrorMessageDisplay;
 
-    private static final ArrayList<String> mLifecycleCallbacks = new ArrayList<>();
-    /**
-     * Called when the activity is first created. This is where you should do all of your normal
-     * static set up: create views, bind data to lists, etc.
-     *
-     * Always followed by onStart().
-     *
-     * @param savedInstanceState The Activity's previously frozen state, if there was one.
-     */
+    private ProgressBar mLoadingIndicator;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mLifecycleDisplay = (TextView) findViewById(R.id.tv_lifecycle_events_display);
+        mSearchBoxEditText = (EditText) findViewById(R.id.et_search_box);
 
-        /*
-         * If savedInstanceState is not null, that means our Activity is not being started for the
-         * first time. Even if the savedInstanceState is not null, it is smart to check if the
-         * bundle contains the key we are looking for. In our case, the key we are looking for maps
-         * to the contents of the TextView that displays our list of callbacks. If the bundle
-         * contains that key, we set the contents of the TextView accordingly.
-         */
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(LIFECYCLE_CALLBACKS_TEXT_KEY)) {
-                String allPreviousLifecycleCallbacks = savedInstanceState
-                        .getString(LIFECYCLE_CALLBACKS_TEXT_KEY);
-                mLifecycleDisplay.setText(allPreviousLifecycleCallbacks);
+        mUrlDisplayTextView = (TextView) findViewById(R.id.tv_url_display);
+        mSearchResultsTextView = (TextView) findViewById(R.id.tv_github_search_results_json);
+
+        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
+
+        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+
+        // TODO (9) If the savedInstanceState bundle is not null, set the text of the URL and search results TextView respectively
+    }
+
+    /**
+     * This method retrieves the search text from the EditText, constructs the
+     * URL (using {@link NetworkUtils}) for the github repository you'd like to find, displays
+     * that URL in a TextView, and finally fires off an AsyncTask to perform the GET request using
+     * our {@link GithubQueryTask}
+     */
+    private void makeGithubSearchQuery() {
+        String githubQuery = mSearchBoxEditText.getText().toString();
+        URL githubSearchUrl = NetworkUtils.buildUrl(githubQuery);
+        mUrlDisplayTextView.setText(githubSearchUrl.toString());
+        new GithubQueryTask().execute(githubSearchUrl);
+    }
+
+    /**
+     * This method will make the View for the JSON data visible and
+     * hide the error message.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't
+     * need to check whether each view is currently visible or invisible.
+     */
+    private void showJsonDataView() {
+        /* First, make sure the error is invisible */
+        mErrorMessageDisplay.setVisibility(View.INVISIBLE);
+        /* Then, make sure the JSON data is visible */
+        mSearchResultsTextView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * This method will make the error message visible and hide the JSON
+     * View.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't
+     * need to check whether each view is currently visible or invisible.
+     */
+    private void showErrorMessage() {
+        /* First, hide the currently visible data */
+        mSearchResultsTextView.setVisibility(View.INVISIBLE);
+        /* Then, show the error */
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
+    }
+
+    public class GithubQueryTask extends AsyncTask<URL, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected String doInBackground(URL... params) {
+            URL searchUrl = params[0];
+            String githubSearchResults = null;
+            try {
+                githubSearchResults = NetworkUtils.getResponseFromHttpUrl(searchUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return githubSearchResults;
+        }
+
+        @Override
+        protected void onPostExecute(String githubSearchResults) {
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            if (githubSearchResults != null && !githubSearchResults.equals("")) {
+                showJsonDataView();
+                mSearchResultsTextView.setText(githubSearchResults);
+            } else {
+                showErrorMessage();
             }
         }
+    }
 
-        // COMPLETED (4) Iterate backwards through mLifecycleCallbacks, appending each String and a newline to mLifecycleDisplay
-        /*
-         * Since any updates to the UI we make after onSaveInstanceState (onStop, onDestroy, etc),
-         * we use an ArrayList to track if these lifecycle events had occurred. If any of them have
-         * occurred, we append their respective name to the TextView.
-         *
-         * The reason we iterate starting from the back of the ArrayList and ending in the front
-         * is that the most recent callbacks are inserted into the front of the ArrayList, so
-         * naturally the older callbacks are stored further back. We could have used a Queue to do
-         * this, but Java has strange API names for the Queue interface that we thought might be
-         * more confusing than this ArrayList solution.
-         */
-        for (int i = mLifecycleCallbacks.size() - 1; i >= 0; i--) {
-            mLifecycleDisplay.append(mLifecycleCallbacks.get(i) + "\n");
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemThatWasClickedId = item.getItemId();
+        if (itemThatWasClickedId == R.id.action_search) {
+            makeGithubSearchQuery();
+            return true;
         }
-
-        // COMPLETED (5) Clear mLifecycleCallbacks after iterating through it
-        /*
-         * Once we've appended each callback from the ArrayList to the TextView, we need to clean
-         * the ArrayList so we don't get duplicate entries in the TextView.
-         */
-        mLifecycleCallbacks.clear();
-
-        logAndAppend(ON_CREATE);
+        return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Called when the activity is becoming visible to the user.
-     *
-     * Followed by onResume() if the activity comes to the foreground, or onStop() if it becomes
-     * hidden.
-     */
-    @Override
-    protected void onStart() {
-        super.onStart();
+    // TODO (3) Override onSaveInstanceState to persist data across Activity recreation
+    // Do the following steps within onSaveInstanceState
+    // TODO (4) Make sure super.onSaveInstanceState is called before doing anything else
 
-        logAndAppend(ON_START);
-    }
+    // TODO (5) Put the contents of the TextView that contains our URL into a variable
+    // TODO (6) Using the key for the query URL, put the string in the outState Bundle
 
-    /**
-     * Called when the activity will start interacting with the user. At this point your activity
-     * is at the top of the activity stack, with user input going to it.
-     *
-     * Always followed by onPause().
-     */
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        logAndAppend(ON_RESUME);
-    }
-
-    /**
-     * Called when the system is about to start resuming a previous activity. This is typically
-     * used to commit unsaved changes to persistent data, stop animations and other things that may
-     * be consuming CPU, etc. Implementations of this method must be very quick because the next
-     * activity will not be resumed until this method returns.
-     *
-     * Followed by either onResume() if the activity returns back to the front, or onStop() if it
-     * becomes invisible to the user.
-     */
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        logAndAppend(ON_PAUSE);
-    }
-
-    /**
-     * Called when the activity is no longer visible to the user, because another activity has been
-     * resumed and is covering this one. This may happen either because a new activity is being
-     * started, an existing one is being brought in front of this one, or this one is being
-     * destroyed.
-     *
-     * Followed by either onRestart() if this activity is coming back to interact with the user, or
-     * onDestroy() if this activity is going away.
-     */
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        // COMPLETED (2) Add the ON_STOP String to the front of mLifecycleCallbacks
-        /*
-         * Since any updates to the UI we make after onSaveInstanceState (onStop, onDestroy, etc),
-         * we use an ArrayList to track if these lifecycle events had occurred. If any of them have
-         * occurred, we append their respective name to the TextView.
-         */
-        mLifecycleCallbacks.add(0, ON_STOP);
-
-        logAndAppend(ON_STOP);
-    }
-
-    /**
-     * Called after your activity has been stopped, prior to it being started again.
-     *
-     * Always followed by onStart()
-     */
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-
-        logAndAppend(ON_RESTART);
-    }
-    
-    /**
-     * The final call you receive before your activity is destroyed. This can happen either because
-     * the activity is finishing (someone called finish() on it, or because the system is
-     * temporarily destroying this instance of the activity to save space. You can distinguish
-     * between these two scenarios with the isFinishing() method.
-     */
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        // COMPLETED (3) Add the ON_DESTROY String to the front of mLifecycleCallbacks
-        /*
-         * Since any updates to the UI we make after onSaveInstanceState (onStop, onDestroy, etc),
-         * we use an ArrayList to track if these lifecycle events had occurred. If any of them have
-         * occurred, we append their respective name to the TextView.
-         */
-        mLifecycleCallbacks.add(0, ON_DESTROY);
-
-        logAndAppend(ON_DESTROY);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        logAndAppend(ON_SAVE_INSTANCE_STATE);
-        String lifecycleDisplayTextViewContents = mLifecycleDisplay.getText().toString();
-        outState.putString(LIFECYCLE_CALLBACKS_TEXT_KEY, lifecycleDisplayTextViewContents);
-    }
-
-    /**
-     * Logs to the console and appends the lifecycle method name to the TextView so that you can
-     * view the series of method callbacks that are called both from the app and from within
-     * Android Studio's Logcat.
-     *
-     * @param lifecycleEvent The name of the event to be logged.
-     */
-    private void logAndAppend(String lifecycleEvent) {
-        Log.d(TAG, "Lifecycle Event: " + lifecycleEvent);
-
-        mLifecycleDisplay.append(lifecycleEvent + "\n");
-    }
-
-    /**
-     * This method resets the contents of the TextView to its default text of "Lifecycle callbacks"
-     *
-     * @param view The View that was clicked. In this case, it is the Button from our layout.
-     */
-    public void resetLifecycleDisplay(View view) {
-        mLifecycleDisplay.setText("Lifecycle callbacks:\n");
-    }
+    // TODO (7) Put the contents of the TextView that contains our raw JSON search results into a variable
+    // TODO (8) Using the key for the raw JSON search results, put the search results into the outState Bundle
 }
