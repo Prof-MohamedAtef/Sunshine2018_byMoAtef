@@ -59,4 +59,8 @@ public class SettingsActivity extends AppCompatActivity {
     // TODO (7) Set the root layout of activity_settings to our newly created prof.mo.ed.sunshine2018.SettingsFragment
     // and remove the padding.
     // [HINT] Use a <fragment> element in xml
+
+    /*
+    All Todos Has Completed
+     */
 }
