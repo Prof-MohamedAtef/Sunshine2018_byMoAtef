@@ -17,7 +17,6 @@ package prof.mo.ed.sunshine2018.AudioVisuals;
  */
 
 import android.content.Context;
-
 import android.media.MediaPlayer;
 import android.media.audiofx.Visualizer;
 import android.os.Build;
