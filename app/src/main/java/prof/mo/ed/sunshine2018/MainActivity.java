@@ -345,12 +345,12 @@ public class MainActivity extends AppCompatActivity implements
             return true;
         }
 
-        // COMPLETED (6) Launch SettingsActivity when the Settings option is clicked
         if (id == R.id.action_settings) {
             Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
             startActivity(startSettingsActivity);
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 }
