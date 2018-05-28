@@ -1,5 +1,3 @@
-package prof.mo.ed.sunshine2018;
-
 /*
  * Copyright (C) 2016 The Android Open Source Project
  *
@@ -33,6 +31,8 @@ import android.widget.Toast;
 
 import prof.mo.ed.sunshine2018.AudioVisuals.AudioInputReader;
 import prof.mo.ed.sunshine2018.AudioVisuals.VisualizerView;
+import prof.mo.ed.sunshine2018.R;
+import prof.mo.ed.sunshine2018.SettingsActivity;
 
 public class VisualizerActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -49,7 +49,7 @@ public class VisualizerActivity extends AppCompatActivity implements SharedPrefe
         setupPermissions();
     }
 
-    // TODO (4) Update the code in setupSharedPreferences and onSharedPreferenceChanged to update
+    // COMPLETED (4) Update the code in setupSharedPreferences and onSharedPreferenceChanged to update
     // mVisualizerView to show the current values stored in shared preferences.
     private void setupSharedPreferences() {
         // Get all of the values from shared preferences to set it up
