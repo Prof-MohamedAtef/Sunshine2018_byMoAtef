@@ -19,16 +19,17 @@ android {
 }
 
 dependencies {
+    // Instrumentation dependencies use androidTestCompile
+    // (as opposed to testCompile for local unit tests run in the JVM)
+    androidTestCompile 'com.android.support:support-annotations:25.1.0'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    // TODO (1) Add the gradle dependency for the support preference fragment
-
-    //completed
     compile 'com.android.support:preference-v7:27.1.1'
-
+    compile 'com.android.support:recyclerview-v7:27.1.1'
 }
-
