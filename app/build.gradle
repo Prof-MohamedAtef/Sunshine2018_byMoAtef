@@ -29,5 +29,6 @@ dependencies {
 
     //completed
     compile 'com.android.support:preference-v7:27.1.1'
+
 }
 
