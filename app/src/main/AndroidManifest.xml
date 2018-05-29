@@ -2,9 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 package="prof.mo.ed.sunshine2018">
 
-<!-- TODO (1) Add the correct permission to access the DroidTermsExample content provider -->
-    <!--completed-->
-    <uses-permission android:name="com.example.udacity.droidtermsexample.TERMS_READ" />
+<uses-permission android:name="com.example.udacity.droidtermsexample.TERMS_READ"/>
 
 <application
     android:allowBackup="true"
