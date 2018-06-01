@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 xmlns:tools="http://schemas.android.com/tools"
     package="prof.mo.ed.sunshine2018">
+
 <application
     android:allowBackup="false"
     android:icon="@mipmap/ic_launcher"
@@ -9,16 +10,21 @@ xmlns:tools="http://schemas.android.com/tools"
     android:supportsRtl="true"
     android:theme="@style/AppTheme"
     tools:ignore="GoogleAppIndexingWarning">
+
     <!-- The manifest entry for the MainActivity -->
     <activity android:name="prof.mo.ed.sunshine2018.MainActivity">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
+
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
     </activity>
+
     <!-- AddTaskActivity -->
     <activity
         android:name="prof.mo.ed.sunshine2018.AddTaskActivity"
         android:label="@string/add_task_activity_name" />
+
 </application>
+
 </manifest>
