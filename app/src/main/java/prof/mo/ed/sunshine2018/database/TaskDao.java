@@ -1,5 +1,7 @@
 package prof.mo.ed.sunshine2018.database;
 
+
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -12,9 +14,9 @@ import java.util.List;
 @Dao
 public interface TaskDao {
 
-    // TODO (2) Wrap the return type with LiveData
+    // COMPLETED (2) Wrap the return type with LiveData
     @Query("SELECT * FROM task ORDER BY priority")
-    List<TaskEntry> loadAllTasks();
+    LiveData<List<TaskEntry>> loadAllTasks();
 
     @Insert
     void insertTask(TaskEntry taskEntry);
