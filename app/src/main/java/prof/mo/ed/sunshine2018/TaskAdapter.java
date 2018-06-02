@@ -134,7 +134,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         return mTaskEntries.size();
     }
 
-    // COMPLETED (2) Add a getTasks method that returns mTaskEntries
     public List<TaskEntry> getTasks() {
         return mTaskEntries;
     }
