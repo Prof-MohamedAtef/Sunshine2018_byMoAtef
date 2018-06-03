@@ -27,6 +27,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+
+
 import java.util.Date;
 
 import prof.mo.ed.sunshine2018.database.AppDatabase;
@@ -77,14 +79,10 @@ public class AddTaskActivity extends AppCompatActivity {
                 mTaskId = intent.getIntExtra(EXTRA_TASK_ID, DEFAULT_TASK_ID);
 
                 Log.d(TAG, "Actively retrieving a specific task from the DataBase");
-                // COMPLETED (3) Extract all this logic outside the Executor and remove the Executor
-                // COMPLETED (2) Fix compile issue by wrapping the return type with LiveData
                 final LiveData<TaskEntry> task = mDb.taskDao().loadTaskById(mTaskId);
-                // COMPLETED (4) Observe tasks and move the logic from runOnUiThread to onChanged
                 task.observe(this, new Observer<TaskEntry>() {
                     @Override
                     public void onChanged(@Nullable TaskEntry taskEntry) {
-                        // COMPLETED (5) Remove the observer as we do not need it any more
                         task.removeObserver(this);
                         Log.d(TAG, "Receiving database update from LiveData");
                         populateUI(taskEntry);
