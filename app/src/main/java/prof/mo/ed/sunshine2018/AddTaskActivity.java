@@ -28,7 +28,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 
-
 import java.util.Date;
 
 import prof.mo.ed.sunshine2018.database.AppDatabase;
