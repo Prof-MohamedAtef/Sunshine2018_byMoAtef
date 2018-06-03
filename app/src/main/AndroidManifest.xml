@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 package="prof.mo.ed.sunshine2018">
 
+<uses-permission android:name="android.permission.VIBRATE" />
 <application
     android:allowBackup="true"
     android:icon="@mipmap/ic_launcher"
@@ -10,6 +11,7 @@ package="prof.mo.ed.sunshine2018">
     android:theme="@style/AppTheme">
     <activity
         android:name=".MainActivity"
+        android:launchMode="singleTop"
         android:screenOrientation="portrait">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"/>
@@ -18,12 +20,12 @@ package="prof.mo.ed.sunshine2018">
         </intent-filter>
     </activity>
 
-    <!-- COMPLETED (14) Declare WaterReminderIntentService in the Manifest and set the exported
-     attribute to false-->
     <!--This is required for immediate syncs -->
     <service
         android:name=".sync.WaterReminderIntentService"
         android:exported="false"/>
-
+    <!-- TODO (14) Add the WaterReminderFirebaseJobService here. It should not be exported and it
+    should have an intent filter for the action com.firebase.jobdispatcher.ACTION_EXECUTE -->
 </application>
+
 </manifest>
