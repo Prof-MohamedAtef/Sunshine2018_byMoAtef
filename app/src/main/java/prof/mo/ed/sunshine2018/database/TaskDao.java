@@ -1,6 +1,5 @@
 package prof.mo.ed.sunshine2018.database;
 
-
 import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
@@ -14,7 +13,6 @@ import java.util.List;
 @Dao
 public interface TaskDao {
 
-    // COMPLETED (2) Wrap the return type with LiveData
     @Query("SELECT * FROM task ORDER BY priority")
     LiveData<List<TaskEntry>> loadAllTasks();
 
@@ -27,6 +25,7 @@ public interface TaskDao {
     @Delete
     void deleteTask(TaskEntry taskEntry);
 
+    // TODO (1) Wrap the return type with LiveData
     @Query("SELECT * FROM task WHERE id = :id")
     TaskEntry loadTaskById(int id);
 }
