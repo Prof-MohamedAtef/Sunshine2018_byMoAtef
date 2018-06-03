@@ -26,8 +26,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import prof.mo.ed.sunshine2018.sync.ReminderTasks;
+import prof.mo.ed.sunshine2018.sync.ReminderUtilities;
 import prof.mo.ed.sunshine2018.sync.WaterReminderIntentService;
-import prof.mo.ed.sunshine2018.utilities.NotificationUtils;
 import prof.mo.ed.sunshine2018.utilities.PreferenceUtilities;
 
 
@@ -53,8 +53,8 @@ public class MainActivity extends AppCompatActivity implements
         /** Set the original values in the UI **/
         updateWaterCount();
         updateChargingReminderCount();
-
-        // TODO (23) Schedule the charging reminder
+        // COMPLETED (23) Schedule the charging reminder
+        ReminderUtilities.scheduleChargingReminder(this);
 
         /** Setup the shared preference listener **/
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -93,12 +93,7 @@ public class MainActivity extends AppCompatActivity implements
         startService(incrementWaterCountIntent);
     }
 
-
-    // TODO (24) Remove the button and testNotification code
-    
-    public void testNotification(View view) {
-        NotificationUtils.remindUserBecauseCharging(this);
-    }
+    // COMPLETED (24) Remove the button and testNotification code
 
     @Override
     protected void onDestroy() {

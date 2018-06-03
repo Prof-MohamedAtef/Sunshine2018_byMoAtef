@@ -71,7 +71,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/charging_plug_content_desc"
-             />
+            />
         <!--android:src="@drawable/ic_power_grey_80px"-->
         <TextView
             android:id="@+id/tv_charging_reminder_count"
@@ -85,13 +85,5 @@
             android:text="@string/default_charge_notification_count" />
 
     </RelativeLayout>
-
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:onClick="testNotification"
-        android:text="Test Notification" />
 
 </LinearLayout>
