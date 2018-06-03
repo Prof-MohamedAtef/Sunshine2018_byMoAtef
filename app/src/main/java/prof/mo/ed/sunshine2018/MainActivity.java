@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements
         startService(incrementWaterCountIntent);
     }
 
-    
+
     public void testNotification(View view) {
         NotificationUtils.remindUserBecauseCharging(this);
     }
