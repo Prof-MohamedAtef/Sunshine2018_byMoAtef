@@ -23,14 +23,17 @@ import prof.mo.ed.sunshine2018.utilities.PreferenceUtilities;
 public class ReminderTasks {
 
     public static final String ACTION_INCREMENT_WATER_COUNT = "increment-water-count";
+    //  TODO (2) Add a public static constant called ACTION_DISMISS_NOTIFICATION
 
     public static void executeTask(Context context, String action) {
         if (ACTION_INCREMENT_WATER_COUNT.equals(action)) {
             incrementWaterCount(context);
         }
+        //      TODO (3) If the user ignored the reminder, clear the notification
     }
 
     private static void incrementWaterCount(Context context) {
         PreferenceUtilities.incrementWaterCount(context);
+        //      TODO (4) If the water count was incremented, clear any notifications
     }
 }
