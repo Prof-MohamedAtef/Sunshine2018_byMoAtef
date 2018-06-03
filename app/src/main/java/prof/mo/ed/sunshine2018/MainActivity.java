@@ -27,8 +27,8 @@ import android.widget.Toast;
 
 import prof.mo.ed.sunshine2018.sync.ReminderTasks;
 import prof.mo.ed.sunshine2018.sync.WaterReminderIntentService;
+import prof.mo.ed.sunshine2018.utilities.NotificationUtils;
 import prof.mo.ed.sunshine2018.utilities.PreferenceUtilities;
-
 
 public class MainActivity extends AppCompatActivity implements
         SharedPreferences.OnSharedPreferenceChangeListener {
@@ -90,7 +90,10 @@ public class MainActivity extends AppCompatActivity implements
         startService(incrementWaterCountIntent);
     }
 
-    // TODO (15) Create a method called testNotification that triggers NotificationUtils' remindUserBecauseCharging
+    // COMPLETED (15) Create a method called testNotification that triggers NotificationUtils' remindUserBecauseCharging
+    public void testNotification(View view) {
+        NotificationUtils.remindUserBecauseCharging(this);
+    }
 
     @Override
     protected void onDestroy() {
