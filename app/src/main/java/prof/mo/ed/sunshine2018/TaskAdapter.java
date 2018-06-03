@@ -26,7 +26,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 
-
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;

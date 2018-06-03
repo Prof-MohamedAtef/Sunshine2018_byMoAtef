@@ -27,7 +27,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
-
 import java.util.Date;
 
 import prof.mo.ed.sunshine2018.database.AppDatabase;
@@ -77,8 +76,13 @@ public class AddTaskActivity extends AppCompatActivity {
                 // populate the UI
                 mTaskId = intent.getIntExtra(EXTRA_TASK_ID, DEFAULT_TASK_ID);
 
+                // TODO (9) Remove the logging and the call to loadTaskById, this is done in the ViewModel now
                 Log.d(TAG, "Actively retrieving a specific task from the DataBase");
                 final LiveData<TaskEntry> task = mDb.taskDao().loadTaskById(mTaskId);
+                // TODO (10) Declare a AddTaskViewModelFactory using mDb and mTaskId
+                // TODO (11) Declare a AddTaskViewModel variable and initialize it by calling ViewModelProviders.of
+                // for that use the factory created above AddTaskViewModel
+                // TODO (12) Observe the LiveData object in the ViewModel. Use it also when removing the observer
                 task.observe(this, new Observer<TaskEntry>() {
                     @Override
                     public void onChanged(@Nullable TaskEntry taskEntry) {
