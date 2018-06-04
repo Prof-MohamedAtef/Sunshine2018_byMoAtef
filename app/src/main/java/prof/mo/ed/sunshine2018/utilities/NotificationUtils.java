@@ -18,7 +18,6 @@ import prof.mo.ed.sunshine2018.R;
 import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 
-
 public class NotificationUtils {
 
     /*
@@ -137,7 +136,6 @@ public class NotificationUtils {
              */
             SunshinePreferences.saveLastNotificationTime(context, System.currentTimeMillis());
         }
-
 
         /* Always close your cursor when you're done with it to avoid wasting resources. */
         todayWeatherCursor.close();
