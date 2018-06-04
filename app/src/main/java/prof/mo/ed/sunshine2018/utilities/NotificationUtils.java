@@ -18,7 +18,6 @@ import prof.mo.ed.sunshine2018.R;
 import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 
-
 public class NotificationUtils {
 
     /*
@@ -104,7 +103,7 @@ public class NotificationUtils {
              * forecast.
              */
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
-                    .setColor(ContextCompat.getColor(context,R.color.colorPrimary))
+                    .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                     .setSmallIcon(smallArtResourceId)
                     .setLargeIcon(largeIcon)
                     .setContentTitle(notificationTitle)

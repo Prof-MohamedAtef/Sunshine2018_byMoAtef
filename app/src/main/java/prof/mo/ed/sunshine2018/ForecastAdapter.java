@@ -28,6 +28,7 @@ import android.widget.TextView;
 import prof.mo.ed.sunshine2018.utilities.SunshineDateUtils;
 import prof.mo.ed.sunshine2018.utilities.SunshineWeatherUtils;
 
+
 /**
  * {@link ForecastAdapter} exposes a list of weather forecasts
  * from a {@link Cursor} to a {@link RecyclerView}.
