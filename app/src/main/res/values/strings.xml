@@ -40,10 +40,11 @@
       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
     <string name="app_name">Sunshine</string>
     <string name="instructions">instructions</string>
-    <string name="default_water_count">water quantity</string>
-    <string name="charging_plug_content_desc">description</string>
-    <string name="default_charge_notification_count">notifications of charge count</string>
+    <string name="default_water_count">Water count</string>
+    <string name="charging_plug_content_desc">plug desc</string>
+    <string name="default_charge_notification_count">charge notification count</string>
     <string name="water_increment_content_desc">water increment description</string>
+
 
 
     <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
