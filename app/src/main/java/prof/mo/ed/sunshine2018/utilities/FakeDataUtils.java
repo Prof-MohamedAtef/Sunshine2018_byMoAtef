@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
 
 import prof.mo.ed.sunshine2018.BoardingPassInfo;
+import prof.mo.ed.sunshine2018.R;
 
 /**
  * This class is used to generate fake data that will be displayed in the boarding pass layout
