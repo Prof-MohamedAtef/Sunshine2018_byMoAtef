@@ -21,7 +21,6 @@ import android.preference.PreferenceManager;
 
 import prof.mo.ed.sunshine2018.R;
 
-
 public final class SunshinePreferences {
 
     /*
