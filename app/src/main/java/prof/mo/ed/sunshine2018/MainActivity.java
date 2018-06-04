@@ -36,7 +36,6 @@ import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 import prof.mo.ed.sunshine2018.sync.SunshineSyncUtils;
 
-
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         ForecastAdapter.ForecastAdapterOnClickHandler {

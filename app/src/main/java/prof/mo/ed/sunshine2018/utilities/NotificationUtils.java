@@ -104,7 +104,7 @@ public class NotificationUtils {
              * forecast.
              */
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
-                    .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
+                    .setColor(ContextCompat.getColor(context,R.color.colorPrimary))
                     .setSmallIcon(smallArtResourceId)
                     .setLargeIcon(largeIcon)
                     .setContentTitle(notificationTitle)
