@@ -15,180 +15,335 @@
  */
 package prof.mo.ed.sunshine2018;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.os.BatteryManager;
-import android.os.Build;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.ProgressBar;
 
-import prof.mo.ed.sunshine2018.sync.ReminderTasks;
-import prof.mo.ed.sunshine2018.sync.ReminderUtilities;
-import prof.mo.ed.sunshine2018.sync.WaterReminderIntentService;
-import prof.mo.ed.sunshine2018.utilities.PreferenceUtilities;
-
+import prof.mo.ed.sunshine2018.data.SunshinePreferences;
+import prof.mo.ed.sunshine2018.data.WeatherContract;
+import prof.mo.ed.sunshine2018.utilities.FakeDataUtils;
 
 public class MainActivity extends AppCompatActivity implements
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        LoaderManager.LoaderCallbacks<Cursor>,
+        ForecastAdapter.ForecastAdapterOnClickHandler {
 
-    private TextView mWaterCountDisplay;
-    private TextView mChargingCountDisplay;
-    private ImageView mChargingImageView;
+    private final String TAG = MainActivity.class.getSimpleName();
 
-    private Toast mToast;
+    /*
+     * The columns of data that we are interested in displaying within our MainActivity's list of
+     * weather data.
+     */
+    public static final String[] MAIN_FORECAST_PROJECTION = {
+            WeatherContract.WeatherEntry.COLUMN_DATE,
+            WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_WEATHER_ID,
+    };
 
-    ChargingBroadcastReceiver mChargingReceiver;
-    IntentFilter mChargingIntentFilter;
+    /*
+     * We store the indices of the values in the array of Strings above to more quickly be able to
+     * access the data from our query. If the order of the Strings above changes, these indices
+     * must be adjusted to match the order of the Strings.
+     */
+    public static final int INDEX_WEATHER_DATE = 0;
+    public static final int INDEX_WEATHER_MAX_TEMP = 1;
+    public static final int INDEX_WEATHER_MIN_TEMP = 2;
+    public static final int INDEX_WEATHER_CONDITION_ID = 3;
+
+
+    /*
+     * This ID will be used to identify the Loader responsible for loading our weather forecast. In
+     * some cases, one Activity can deal with many Loaders. However, in our case, there is only one.
+     * We will still use this ID to initialize the loader and create the loader for best practice.
+     * Please note that 44 was chosen arbitrarily. You can use whatever number you like, so long as
+     * it is unique and consistent.
+     */
+    private static final int ID_FORECAST_LOADER = 44;
+
+    private ForecastAdapter mForecastAdapter;
+    private RecyclerView mRecyclerView;
+    private int mPosition = RecyclerView.NO_POSITION;
+
+    private ProgressBar mLoadingIndicator;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_forecast);
+        getSupportActionBar().setElevation(0f);
 
-        /** Get the views **/
-        mWaterCountDisplay = (TextView) findViewById(R.id.tv_water_count);
-        mChargingCountDisplay = (TextView) findViewById(R.id.tv_charging_reminder_count);
-        mChargingImageView = (ImageView) findViewById(R.id.iv_power_increment);
-
-        /** Set the original values in the UI **/
-        updateWaterCount();
-        updateChargingReminderCount();
-        ReminderUtilities.scheduleChargingReminder(this);
-
-        /** Setup the shared preference listener **/
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        prefs.registerOnSharedPreferenceChangeListener(this);
+        // TODO (12) Remove the fake data creation since we can now sync with live data
+        FakeDataUtils.insertFakeData(this);
 
         /*
-         * Setup and register the broadcast receiver
+         * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
+         * do things like set the adapter of the RecyclerView and toggle the visibility.
          */
-        mChargingIntentFilter = new IntentFilter();
-        mChargingReceiver = new ChargingBroadcastReceiver();
-        mChargingIntentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
-        mChargingIntentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_forecast);
+
+        /*
+         * The ProgressBar that will indicate to the user that we are loading data. It will be
+         * hidden when no data is loading.
+         *
+         * Please note: This so called "ProgressBar" isn't a bar by default. It is more of a
+         * circle. We didn't make the rules (or the names of Views), we just follow them.
+         */
+        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+
+        /*
+         * A LinearLayoutManager is responsible for measuring and positioning item views within a
+         * RecyclerView into a linear list. This means that it can produce either a horizontal or
+         * vertical list depending on which parameter you pass in to the LinearLayoutManager
+         * constructor. In our case, we want a vertical list, so we pass in the constant from the
+         * LinearLayoutManager class for vertical lists, LinearLayoutManager.VERTICAL.
+         *
+         * There are other LayoutManagers available to display your data in uniform grids,
+         * staggered grids, and more! See the developer documentation for more details.
+         *
+         * The third parameter (shouldReverseLayout) should be true if you want to reverse your
+         * layout. Generally, this is only true with horizontal lists that need to support a
+         * right-to-left layout.
+         */
+        LinearLayoutManager layoutManager =
+                new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+
+        /* setLayoutManager associates the LayoutManager we created above with our RecyclerView */
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        /*
+         * Use this setting to improve performance if you know that changes in content do not
+         * change the child layout size in the RecyclerView
+         */
+        mRecyclerView.setHasFixedSize(true);
+
+        /*
+         * The ForecastAdapter is responsible for linking our weather data with the Views that
+         * will end up displaying our weather data.
+         *
+         * Although passing in "this" twice may seem strange, it is actually a sign of separation
+         * of concerns, which is best programming practice. The ForecastAdapter requires an
+         * Android Context (which all Activities are) as well as an onClickHandler. Since our
+         * MainActivity implements the ForecastAdapter ForecastOnClickHandler interface, "this"
+         * is also an instance of that type of handler.
+         */
+        mForecastAdapter = new ForecastAdapter(this, this);
+
+        /* Setting the adapter attaches it to the RecyclerView in our layout. */
+        mRecyclerView.setAdapter(mForecastAdapter);
+
+
+        showLoading();
+
+        /*
+         * Ensures a loader is initialized and active. If the loader doesn't already exist, one is
+         * created and (if the activity/fragment is currently started) starts the loader. Otherwise
+         * the last created loader is re-used.
+         */
+        getSupportLoaderManager().initLoader(ID_FORECAST_LOADER, null, this);
+
+        //  TODO (13) Call SunshineSyncUtils's startImmediateSync method
+
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    /**
+     * Uses the URI scheme for showing a location found on a map in conjunction with
+     * an implicit Intent. This super-handy Intent is detailed in the "Common Intents" page of
+     * Android's developer site:
+     *
+     * @see "http://developer.android.com/guide/components/intents-common.html#Maps"
+     * <p>
+     * Protip: Hold Command on Mac or Control on Windows and click that link to automagically
+     * open the Common Intents page
+     */
+    private void openPreferredLocationInMap() {
+        double[] coords = SunshinePreferences.getLocationCoordinates(this);
+        String posLat = Double.toString(coords[0]);
+        String posLong = Double.toString(coords[1]);
+        Uri geoLocation = Uri.parse("geo:" + posLat + "," + posLong);
 
-        /** Determine the current charging state **/
-        // COMPLETED (1) Check if you are on Android M or later, if so...
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // COMPLETED (2) Get a BatteryManager instance using getSystemService()
-            BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
-            // COMPLETED (3) Call isCharging on the battery manager and pass the result on to your show
-            // charging method
-            showCharging(batteryManager.isCharging());
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
         } else {
-            // COMPLETED (4) If your user is not on M+, then...
-
-            // COMPLETED (5) Create a new intent filter with the action ACTION_BATTERY_CHANGED. This is a
-            // sticky broadcast that contains a lot of information about the battery state.
-            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            // COMPLETED (6) Set a new Intent object equal to what is returned by registerReceiver, passing in null
-            // for the receiver. Pass in your intent filter as well. Passing in null means that you're
-            // getting the current state of a sticky broadcast - the intent returned will contain the
-            // battery information you need.
-            Intent currentBatteryStatusIntent = registerReceiver(null, ifilter);
-            // COMPLETED (7) Get the integer extra BatteryManager.EXTRA_STATUS. Check if it matches
-            // BatteryManager.BATTERY_STATUS_CHARGING or BatteryManager.BATTERY_STATUS_FULL. This means
-            // the battery is currently charging.
-            int batteryStatus = currentBatteryStatusIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            boolean isCharging = batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING ||
-                    batteryStatus == BatteryManager.BATTERY_STATUS_FULL;
-            // COMPLETED (8) Update the UI using your showCharging method
-            showCharging(isCharging);
+            Log.d(TAG, "Couldn't call " + geoLocation.toString() + ", no receiving apps installed!");
         }
-
-        /** Register the receiver for future state changes **/
-        registerReceiver(mChargingReceiver, mChargingIntentFilter);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(mChargingReceiver);
     }
 
     /**
-     * Updates the TextView to display the new water count from SharedPreferences
-     */
-    private void updateWaterCount() {
-        int waterCount = PreferenceUtilities.getWaterCount(this);
-        mWaterCountDisplay.setText(waterCount+"");
-    }
-
-    /**
-     * Updates the TextView to display the new charging reminder count from SharedPreferences
-     */
-    private void updateChargingReminderCount() {
-        int chargingReminders = PreferenceUtilities.getChargingReminderCount(this);
-        String formattedChargingReminders = getResources().getQuantityString(
-                R.plurals.charge_notification_count, chargingReminders, chargingReminders);
-        mChargingCountDisplay.setText(formattedChargingReminders);
-
-    }
-
-    /**
-     * Adds one to the water count and shows a toast
-     */
-    public void incrementWater(View view) {
-        if (mToast != null) mToast.cancel();
-        mToast = Toast.makeText(this, R.string.water_chug_toast, Toast.LENGTH_SHORT);
-        mToast.show();
-
-        Intent incrementWaterCountIntent = new Intent(this, WaterReminderIntentService.class);
-        incrementWaterCountIntent.setAction(ReminderTasks.ACTION_INCREMENT_WATER_COUNT);
-        startService(incrementWaterCountIntent);
-    }
-
-    
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        /** Cleanup the shared preference listener **/
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        prefs.unregisterOnSharedPreferenceChangeListener(this);
-    }
-
-    /**
-     * This is a listener that will update the UI when the water count or charging reminder counts
-     * change
+     * Called by the {@link android.support.v4.app.LoaderManagerImpl} when a new Loader needs to be
+     * created. This Activity only uses one loader, so we don't necessarily NEED to check the
+     * loaderId, but this is certainly best practice.
+     *
+     * @param loaderId The loader ID for which we need to create a loader
+     * @param bundle   Any arguments supplied by the caller
+     * @return A new Loader instance that is ready to start loading.
      */
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (PreferenceUtilities.KEY_WATER_COUNT.equals(key)) {
-            updateWaterCount();
-        } else if (PreferenceUtilities.KEY_CHARGING_REMINDER_COUNT.equals(key)) {
-            updateChargingReminderCount();
+    public Loader<Cursor> onCreateLoader(int loaderId, Bundle bundle) {
+
+
+        switch (loaderId) {
+
+            case ID_FORECAST_LOADER:
+                /* URI for all rows of weather data in our weather table */
+                Uri forecastQueryUri = WeatherContract.WeatherEntry.CONTENT_URI;
+                /* Sort order: Ascending by date */
+                String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
+                /*
+                 * A SELECTION in SQL declares which rows you'd like to return. In our case, we
+                 * want all weather data from today onwards that is stored in our weather table.
+                 * We created a handy method to do that in our WeatherEntry class.
+                 */
+                String selection = WeatherContract.WeatherEntry.getSqlSelectForTodayOnwards();
+
+                return new CursorLoader(this,
+                        forecastQueryUri,
+                        MAIN_FORECAST_PROJECTION,
+                        selection,
+                        null,
+                        sortOrder);
+
+            default:
+                throw new RuntimeException("Loader Not Implemented: " + loaderId);
         }
     }
 
-    private void showCharging(boolean isCharging){
-        if (isCharging) {
-            mChargingImageView.setImageResource(R.drawable.ic_power_pink_80px);
+    /**
+     * Called when a Loader has finished loading its data.
+     *
+     * NOTE: There is one small bug in this code. If no data is present in the cursor do to an
+     * initial load being performed with no access to internet, the loading indicator will show
+     * indefinitely, until data is present from the ContentProvider. This will be fixed in a
+     * future version of the course.
+     *
+     * @param loader The Loader that has finished.
+     * @param data   The data generated by the Loader.
+     */
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        } else {
-            mChargingImageView.setImageResource(R.drawable.ic_power_grey_80px);
-        }
+
+        mForecastAdapter.swapCursor(data);
+        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+        mRecyclerView.smoothScrollToPosition(mPosition);
+        if (data.getCount() != 0) showWeatherDataView();
     }
 
-    private class ChargingBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            boolean isCharging = (action.equals(Intent.ACTION_POWER_CONNECTED));
+    /**
+     * Called when a previously created loader is being reset, and thus making its data unavailable.
+     * The application should at this point remove any references it has to the Loader's data.
+     *
+     * @param loader The Loader that is being reset.
+     */
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        /*
+         * Since this Loader's data is now invalid, we need to clear the Adapter that is
+         * displaying the data.
+         */
+        mForecastAdapter.swapCursor(null);
+    }
 
-            showCharging(isCharging);
+    /**
+     * This method is for responding to clicks from our list.
+     *
+     * @param date Normalized UTC time that represents the local date of the weather in GMT time.
+     * @see WeatherContract.WeatherEntry#COLUMN_DATE
+     */
+    @Override
+    public void onClick(long date) {
+        Intent weatherDetailIntent = new Intent(MainActivity.this, DetailActivity.class);
+        Uri uriForDateClicked = WeatherContract.WeatherEntry.buildWeatherUriWithDate(date);
+        weatherDetailIntent.setData(uriForDateClicked);
+        startActivity(weatherDetailIntent);
+    }
+
+    /**
+     * This method will make the View for the weather data visible and hide the error message and
+     * loading indicator.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't need to check whether
+     * each view is currently visible or invisible.
+     */
+    private void showWeatherDataView() {
+        /* First, hide the loading indicator */
+        mLoadingIndicator.setVisibility(View.INVISIBLE);
+        /* Finally, make sure the weather data is visible */
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * This method will make the loading indicator visible and hide the weather View and error
+     * message.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't need to check whether
+     * each view is currently visible or invisible.
+     */
+    private void showLoading() {
+        /* Then, hide the weather data */
+        mRecyclerView.setVisibility(View.INVISIBLE);
+        /* Finally, show the loading indicator */
+        mLoadingIndicator.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * This is where we inflate and set up the menu for this Activity.
+     *
+     * @param menu The options menu in which you place your items.
+     *
+     * @return You must return true for the menu to be displayed;
+     *         if you return false it will not be shown.
+     *
+     * @see #onPrepareOptionsMenu
+     * @see #onOptionsItemSelected
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
+        MenuInflater inflater = getMenuInflater();
+        /* Use the inflater's inflate method to inflate our menu layout to this menu */
+        inflater.inflate(R.menu.forecast, menu);
+        /* Return true so that the menu is displayed in the Toolbar */
+        return true;
+    }
+
+    /**
+     * Callback invoked when a menu item was selected from this Activity's menu.
+     *
+     * @param item The menu item that was selected by the user
+     *
+     * @return true if you handle the menu click here, false otherwise
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
         }
+        if (id == R.id.action_map) {
+            openPreferredLocationInMap();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
