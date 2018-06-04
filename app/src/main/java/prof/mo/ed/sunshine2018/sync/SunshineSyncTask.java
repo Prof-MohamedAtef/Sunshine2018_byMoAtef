@@ -19,7 +19,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 
-
 import java.net.URL;
 
 import prof.mo.ed.sunshine2018.data.WeatherContract;
