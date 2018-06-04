@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 
-
 public class FakeDataUtils {
 
     private static int [] weatherIDs = {200,300,500,711,900,962};

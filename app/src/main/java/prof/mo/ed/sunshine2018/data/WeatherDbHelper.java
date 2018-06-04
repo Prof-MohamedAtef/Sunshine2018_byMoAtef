@@ -99,6 +99,7 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(SQL_CREATE_WEATHER_TABLE);
     }
 
+
     /**
      * This database is only a cache for online data, so its upgrade policy is simply to discard
      * the data and call through to onCreate to recreate the table. Note that this only fires if

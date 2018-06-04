@@ -23,6 +23,7 @@ import android.support.annotation.NonNull;
 
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 
+
 public class SunshineSyncUtils {
 
 //  TODO (10) Add constant values to sync Sunshine every 3 - 4 hours
