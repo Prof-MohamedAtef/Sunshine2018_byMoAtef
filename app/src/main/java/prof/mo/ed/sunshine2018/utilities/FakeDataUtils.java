@@ -16,7 +16,6 @@ package prof.mo.ed.sunshine2018.utilities;
 * limitations under the License.
 */
 
-
 import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
 
