@@ -34,6 +34,7 @@ import prof.mo.ed.sunshine2018.R;
 import prof.mo.ed.sunshine2018.sync.ReminderTasks;
 import prof.mo.ed.sunshine2018.sync.WaterReminderIntentService;
 
+
 /**
  * Utility class for creating hydration notifications
  */
@@ -92,7 +93,6 @@ public class NotificationUtils {
         }
         notificationManager.notify(WATER_REMINDER_NOTIFICATION_ID, notificationBuilder.build());
     }
-
     private static Action ignoreReminderAction(Context context) {
         Intent ignoreReminderIntent = new Intent(context, WaterReminderIntentService.class);
         ignoreReminderIntent.setAction(ReminderTasks.ACTION_DISMISS_NOTIFICATION);
