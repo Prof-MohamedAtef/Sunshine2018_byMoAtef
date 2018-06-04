@@ -138,6 +138,7 @@ public class NotificationUtils {
             SunshinePreferences.saveLastNotificationTime(context, System.currentTimeMillis());
         }
 
+
         /* Always close your cursor when you're done with it to avoid wasting resources. */
         todayWeatherCursor.close();
     }

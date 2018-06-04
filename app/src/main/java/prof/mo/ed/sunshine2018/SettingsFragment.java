@@ -28,6 +28,7 @@ import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 import prof.mo.ed.sunshine2018.sync.SunshineSyncUtils;
 
+
 /**
  * The SettingsFragment serves as the display for all of the user's settings. In Sunshine, the
  * user will be able to change their preference for units of measurement from metric to imperial,

@@ -33,7 +33,6 @@ import prof.mo.ed.sunshine2018.data.WeatherContract;
 import prof.mo.ed.sunshine2018.utilities.SunshineDateUtils;
 import prof.mo.ed.sunshine2018.utilities.SunshineWeatherUtils;
 
-
 public class DetailActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
