@@ -26,6 +26,7 @@ import android.support.annotation.NonNull;
 
 import prof.mo.ed.sunshine2018.utilities.SunshineDateUtils;
 
+
 /**
  * This class serves as the ContentProvider for all of Sunshine's data. This class allows us to
  * bulkInsert data, query data, and delete data.

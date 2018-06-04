@@ -18,7 +18,6 @@ package prof.mo.ed.sunshine2018.utilities;
 import android.content.Context;
 import android.text.format.DateUtils;
 
-
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
