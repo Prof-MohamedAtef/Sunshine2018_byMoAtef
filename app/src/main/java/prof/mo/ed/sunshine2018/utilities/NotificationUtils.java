@@ -18,6 +18,7 @@ import prof.mo.ed.sunshine2018.R;
 import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 
+
 public class NotificationUtils {
 
     /*

@@ -36,10 +36,11 @@ import prof.mo.ed.sunshine2018.data.SunshinePreferences;
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 import prof.mo.ed.sunshine2018.sync.SunshineSyncUtils;
 
-
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         ForecastAdapter.ForecastAdapterOnClickHandler {
+
+//  TODO (2) Add dimens.xml, create and use dimensions for Sunshine's layouts
 
     private final String TAG = MainActivity.class.getSimpleName();
 
