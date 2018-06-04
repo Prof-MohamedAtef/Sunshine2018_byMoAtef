@@ -19,7 +19,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
