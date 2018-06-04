@@ -18,16 +18,16 @@ package prof.mo.ed.sunshine2018.sync;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+
+
 import java.net.URL;
 
 import prof.mo.ed.sunshine2018.data.WeatherContract;
 import prof.mo.ed.sunshine2018.utilities.NetworkUtils;
 import prof.mo.ed.sunshine2018.utilities.OpenWeatherJsonUtils;
 
-//  COMPLETED (1) Create a class called SunshineSyncTask
 public class SunshineSyncTask {
 
-//  COMPLETED (2) Within SunshineSyncTask, create a synchronized public static void method called syncWeather
 
     /**
      * Performs the network request for updated weather, parses the JSON from that request, and
@@ -39,7 +39,6 @@ public class SunshineSyncTask {
      */
     synchronized public static void syncWeather(Context context) {
 
-//      COMPLETED (3) Within syncWeather, fetch new weather data
 
         try {
             /*
@@ -66,7 +65,6 @@ public class SunshineSyncTask {
                 /* Get a handle on the ContentResolver to delete and insert data */
                 ContentResolver sunshineContentResolver = context.getContentResolver();
 
-//              COMPLETED (4) If we have valid results, delete the old data and insert the new
                 /* Delete old weather data because we don't need to keep multiple days' data */
                 sunshineContentResolver.delete(
                         WeatherContract.WeatherEntry.CONTENT_URI,
